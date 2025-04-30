@@ -1,0 +1,175 @@
+---
+title: Add Two Numbers
+author: Jobert Sá
+description: Solution to Add Two Numbers problem from LeetCode.
+date: 2024-07-04 12:30
+tags: ['leetcode', 'medium', 'linked-list', 'math', 'recursion']
+---
+This problem involves adding two numbers represented by linked lists.
+
+You can find the original problem described on [LeetCode][problem-url].
+
+## Problem Statement
+You are given two **non-empty** linked lists representing two non-negative integers. The digits are stored in **reverse order**, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.
+
+You may assume the two numbers do not contain any leading zero, except the number 0 itself.
+
+**Example 1**
+**Input**: `l1 = [2, 4, 3]`, `l2 = [5, 6, 4]`
+**Output**: `[7, 0, 8]`
+**Explanation**: `342 + 465 = 807`.
+
+**Example 2**
+**Input**: `l1 = [0]`, `l2 = [0]`
+**Output**: `[0]`
+
+**Example 3**
+**Input**: `l1 = [9, 9, 9, 9, 9, 9, 9]`, `l2 = [9, 9, 9, 9]`
+**Output**: `[8, 9, 9, 9, 0, 0, 0, 1]`
+
+**Constraints**
+- The number of nodes in each linked list is in the range `[1, 100]`.
+- `0 <= Node.val <= 9`
+- It is guaranteed that the list represents a number that does not have leading zeros.
+
+## Problem Solving
+There are a few ways to solve this problem. I will explain all of them to you in the next sections. 👨‍🏫
+Before that, below is the definition of `ListNode` by LeetCode, which we're going to use on every solution.
+``` swift
+public class ListNode {
+
+    public var val: Int
+    public var next: ListNode? = nil
+
+    public init(_ val: Int) {
+        self.val = val
+    }
+
+    public init(_ val: Int, _ next: ListNode?) {
+        self.val = val
+        self.next = next
+    }
+}
+```
+
+### Iterative method
+The iterative method involves traversing both linked lists, adding corresponding digits along with any carry-over from the previous addition.
+
+``` swift
+func addTwoNumbers(_ l1: ListNode?, _ l2: ListNode?) -> ListNode? {
+    // Dummy head to handle corner case (we return the next node)
+    let dummyHead = ListNode(0)
+    // This is the pointer we will use to construct the new list
+    var currentNode: ListNode? = dummyHead
+    // These pointers will navigate through the nodes
+    var p1 = l1
+    var p2 = l2
+
+    // No initial carry value
+    var carry = 0
+
+    // Iterate until we reach the end of both lists
+    while p1 != nil || p2 != nil {
+        // Sum of the current values and carry
+        let sum = carry + (p1?.val ?? 0) + (p2?.val ?? 0)
+
+        // New carry
+        carry = sum / 10
+        // New node with the unit digit
+        currentNode?.next = ListNode(sum % 10)
+
+        // Move to the next nodes
+        currentNode = currentNode?.next
+        p1 = p1?.next
+        p2 = p2?.next
+    }
+
+    // Add a new node if there's a carry left
+    if carry > 0 {
+        currentNode?.next = ListNode(carry)
+    }
+
+    // Return the head of the new list (ignore the dummy head)
+    return dummyHead.next
+}
+```
+[![Source code][solution-shield]][solution1-url]
+
+### Recursive method
+This method solves the problem with a few less lines of code, with the use of recursion to move through the list nodes.
+``` swift
+func addTwoNumbers(_ l1: ListNode?, _ l2: ListNode?) -> ListNode? {
+    // Start by calling the helper with the initial carry (zero)
+    addTwoNumbers(l1, l2, 0)
+}
+
+private func addTwoNumbers(_ l1: ListNode?, _ l2: ListNode?, _ carry: Int) -> ListNode? {
+    // Base case: return nil if we reach the end of both lists and carry is zero
+    guard l1 != nil || l2 != nil || carry > 0 else { return nil }
+
+    // Sum of the current values and carry
+    let sum = (l1?.val ?? 0) + (l2?.val ?? 0) + carry
+    // New node with the unit digit
+    let resultNode = ListNode(sum % 10)
+    // Recursively add the next node with the new carry
+    resultNode.next = addTwoNumbers(l1?.next, l2?.next, sum / 10)
+
+    // Return the resulting node
+    return resultNode
+}
+```
+[![Source code][solution-shield]][solution2-url]
+
+This solution looks pretty good, with just a few lines of code. But can we have an even better solution? 🤓
+
+### Recursive method (improved)
+We can improve that previous solution if we could stop the recursion earlier, once we reach the end of either one of the lists.
+Let me show you how to do it. 👨‍🏫
+``` swift
+func addTwoNumbers(_ l1: ListNode?, _ l2: ListNode?) -> ListNode? {
+    // Base cases: return the other list if one is nil (empty)
+    guard let l1 else { return l2 }
+    guard let l2 else { return l1 }
+
+    // Sum of current nodes
+    let sum = l1.val + l2.val
+    // New node with the unit digit
+    let resultNode = ListNode(sum % 10)
+    // Recursively add the next node
+    let nextNode = addTwoNumbers(l1.next, l2.next)
+    if sum > 9 {
+        // If the sum is greater than 9, carry 1 to the new node
+        resultNode.next = addTwoNumbers(nextNode, ListNode(1))
+    } else {
+        // Otherwise, there is no carry
+        resultNode.next = nextNode
+    }
+
+    // Return the resulting node
+    return resultNode
+}
+```
+[![Source code][solution-shield]][solution3-url]
+
+## Complexity Analysis
+### Time Complexity
+Both iterative and recursive methods have the same  time complexity: `O(max(m, n))`, where `m` and `n` are the number of nodes in each list. This is because they both go through all of the nodes in both lists, one by one, at the same time.
+The *"improved recursive"* version works similar, but will stop earlier in case one list is shorter, so the time complexity is `O(min(m, n))`. However, if both lists have the same size, all solutions will end with the same `O(n)` (since `m == n` in this case).
+### Space Complexity
+All the solutions use the same `O(1)` constant space. This is because we are only manipulating pointers and not creating any extra space. The total space for each solutions is `O(max(m, n))`. In some cases, also `O(max(m, n) + 1)`, if there will be a carry at the end.
+
+## Conclusion
+All solutions described here, whether they are iterative or recursive, are good enough providing a comprehensive understanding of different approaches to solving this problem.
+
+The *"improved recursive"* version might have a slight advantage when it comes to time complexity, since it could finish earlier.
+But in worst case scenarios (when both lists are the same size, for instance), they all will have the same time and space complexities.
+Also, while the recursive method handles the problem elegantly by breaking it down into smaller subproblems, it has potential drawbacks, particularly concerning the recursion depth and stack overflow.
+
+So keep all these things in mind when experimenting with these different options. 🧑‍🔬
+
+<!-- Markdown references https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[problem-url]: https://leetcode.com/problems/add-two-numbers
+[solution-shield]: https://img.shields.io/badge/-solution-333?style=flat&logo=GitHub&logoColor=white
+[solution1-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/002%20-%20Add%20Two%20Numbers/Problem002IterativeSolution.swift
+[solution2-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/002%20-%20Add%20Two%20Numbers/Problem002RecursiveHelperSolution.swift
+[solution3-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/002%20-%20Add%20Two%20Numbers/Problem002RecursiveSolution.swift
