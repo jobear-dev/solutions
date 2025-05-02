@@ -1,0 +1,170 @@
+---
+title: Longest Substring Without Repeating Characters
+author: Jobert Sá
+description: Solution to Longest Substring Without Repeating Characters problem from LeetCode.
+date: 2024-07-17 12:30
+tags: ['leetcode', 'medium', 'hash-table', 'string', 'sliding-window']
+---
+This challenge here is to find the longest substring without repeating characters.
+
+You can find the original problem described on [LeetCode][problem-url].
+
+## Problem Statement
+Given a string `s`, find the length of the **longest substring** without repeating characters.
+
+The problem definition on LeetCode also defines what is a substring:
+*"A substring is a contiguous non-empty sequence of characters within a string"*.
+
+**Example 1**
+**Input**: `s = "abcabcbb"`
+**Output**: `3`
+**Explanation**: *The answer is "abc", with the length of 3.*
+
+**Example 2**
+**Input**: `s = "bbbbb"`
+**Output**: `1`
+**Explanation**: *The answer is "b", with the length of 1.*
+
+**Example 3**
+**Input**: `s = "pwwkew"`
+**Output**: `3`
+**Explanation**: *The answer is "wke", with the length of 3.*
+*Notice that the answer must be a substring, "pwke" is a subsequence and not a substring.*
+
+**Constraints**
+- `0 <= s.length <= 5 * 104`
+- `s` consists of English letters, digits, symbols and spaces.
+
+## Problem Solving
+
+### Brute Force
+A straightforward approach is to use two nested loops to generate all possible substrings and check each one for duplicate characters.
+
+``` swift
+func lengthOfLongestSubstring(_ s: String) -> Int {
+    // Convert the string to an array of characters for easy indexing
+    let chars = Array(s)
+    var maxLength = 0
+
+    for i in 0..<chars.count {
+        // Track characters in the current string
+        var seenChars = Set<Character>()
+        // Check substrings starting from index i
+        for j in i..<chars.count {
+            if seenChars.contains(chars[j]) {
+                // Found a repeating character
+                break
+            }
+            seenChars.insert(chars[j])
+        }
+        // Update the maximum length
+        maxLength = max(maxLength, seenChars.count)
+    }
+
+    return maxLength
+}
+```
+[![Source code][solution-shield]][solution1-url]
+
+### Sliding Window
+A more efficient solution uses the sliding window technique, which maintains a window of characters without duplicates and slides it along the string.
+
+``` swift
+func lengthOfLongestSubstring(_ s: String) -> Int {
+    // Hash Table to track the index of characters
+    var indexMap = [Character: Int]()
+    var maxLength = 0
+    var start = 0
+
+    for (i, char) in s.enumerated() {
+        if let index = indexMap[char], index >= start {
+            // Move the start index to the right of the duplicate's last index
+            start = index + 1
+        }
+        // Update the character's index
+        indexMap[char] = i
+        // Update the maximum length
+        maxLength = max(maxLength, i - start + 1)
+    }
+
+    return maxLength
+}
+```
+[![Source code][solution-shield]][solution2-url]
+
+### Optimized Sliding Window with ASCII
+An optimized version of the sliding window technique leverages the fixed size of the ASCII character set, using an array to track the index of characters.
+Let me show you how to do it. 👨‍🏫
+
+``` swift
+func lengthOfLongestSubstring(_ s: String) -> Int {
+    // ASCII character set
+    var indexArray = Array(repeating: -1, count: 128)
+    var maxLength = 0
+    var start = 0
+    // Convert the string to an array of characters for easy indexing
+    let chars = Array(s)
+
+    for i in 0..<chars.count {
+        guard let asciiValue = chars[i].asciiValue else { continue }
+        let asciiIndex = Int(asciiValue)
+
+        if indexArray[asciiIndex] != -1 {
+            // Move the start index to the right of the duplicate's last index
+            start = max(start, indexArray[asciiIndex] + 1)
+        }
+
+        // Update the character's index
+        indexArray[asciiIndex] = i
+        // Update the maximum length
+        maxLength = max(maxLength, i - start + 1)
+    }
+
+    return maxLength
+}
+```
+[![Source code][solution-shield]][solution3-url]
+
+## Complexity Analysis
+### Time Complexity
+The Brute Force solution takes the last place, with complexity `O(n2)`, where `n` is the length of the string, due to the nested loops and set operations.
+We can take a look at how the algorithm executes: the outer loop runs `n` times, while the inner loop, in the worst case, runs `n - i` times for each `i` in `0...n`, which can turn into `n` operations.
+
+The total number of operations can be approximated as follows:
+$$\sum_{i=0}^{n-1} (n - i) = n + (n-1) + (n-2) + \cdots + 1 = \frac{n(n + 1)}{2}$$
+
+Thus, the time complexity is `O(n2)`.
+
+When it comes to the sliding window approaches, both take the first place, with time complexity `O(n)`:
+- Both run a loop `n` times.
+- The first solution performs constant time operations inside the loop, since it's accessing a dictionary.
+- The optimized solution also access and updates the array for each character at constant time.
+### Space Complexity
+For both Brute Force and Sliding Window, the space complexity is determined by the need to track unique characters in the input string:
+- In the brute force approach, we use a set to store characters in each substring.
+- In the sliding window approach, we use a dictionary to store the index of each character.
+
+Thus, the space complexity is `O(min(m, n))`, where `n`is the length of the string and `m` is the size of the character set (which is 128 for ASCII).
+
+This is because the storage requirement will be bound by either the number of characters in the string or the unique characters that can appear, whichever is smaller.
+
+Now, when it comes to the optimized solution, we used an array of size 128 to store the last seen index of each character. This size is constant and does not depend on the input string length.
+This solution assumes the input string contains only ASCII characters, limiting the character set to 128 possible values.
+
+Since the space used by the array does not change with the input string length and remains contant, the space complexity is of contant order - `O(1)`.
+
+
+## Conclusion
+The brute force solution could be used for small input sizes due to its inefficiency.
+
+The sliding window solutions are efficient for larger inputs.
+But the first solution would work the best in case of dynamic character sets, while the second one works the best for fixed and known character sets (like ASCII).
+
+So keep all these points in mind when experimenting with these different approaches. 🧑‍🔬
+
+<!-- Markdown references https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[problem-url]: https://leetcode.com/problems/longest-substring-without-repeating-characters
+[solution-shield]: https://img.shields.io/badge/-solution-333?style=flat&logo=GitHub&logoColor=white
+[solution1-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/003%20-%20Longest%20Substring%20Without%20Repeating%20Characters/Problem003BruteForceSolution.swift
+[solution2-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/003%20-%20Longest%20Substring%20Without%20Repeating%20Characters/Problem003SlidingWindowSolution.swift
+[solution3-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/003%20-%20Longest%20Substring%20Without%20Repeating%20Characters/Problem003OptimizedSlidingWindowSolution.swift
