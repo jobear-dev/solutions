@@ -1,0 +1,200 @@
+---
+title: Median of Two Sorted Arrays
+author: Jobert Sá
+description: Solution to Median of Two Sorted Arrays problem from LeetCode.
+date: 2024-08-02 12:30
+tags: ['leetcode', 'hard', 'array', 'binary-search', 'divide-and-conquer']
+---
+The problem of finding the median of two sorted arrays is a classic algorithm problem on LeetCode (Problem #4).
+It can be solved using various approaches with different complexities and levels of difficulty.
+In this article, we will explore an easy and simple solution, other good solutions, and finally the best solution.
+
+You can find the original problem described on [LeetCode][problem-url].
+
+## Problem Statement
+
+Given two sorted arrays `nums1` and `nums2 of size `m` and `n` respectively, return the median of the two sorted arrays.
+
+The overall run time complexity should be `O(log (m+n))`.
+
+**Example 1**
+**Input**: `nums1 = [1,3]`, `nums2 = [2]`
+**Output**: `2.00000`
+**Explanation**: *merged array = [1,2,3] and median is 2.*
+
+**Example 2**
+**Input**: `nums1 = [1,2]`, `nums2 = [3,4]`
+**Output**: `2.50000`
+**Explanation**: *merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.*
+
+**Constraints**
+- `nums1.length == m`
+- `nums2.length == n`
+- `0 <= m <= 1000`
+- `0 <= n <= 1000`
+- `1 <= m + n <= 2000`
+- `-106 <= nums1[i]`, `nums2[i] <= 106`
+
+## Problem Solving
+
+### 1<sup>st</sup> Solution: Merge and Sort
+This approach involves merging the two arrays into a single array and then sorting the merged array to find the median. This is straightforward but not the most efficient.
+
+``` swift
+func findMedianSortedArrays(_ nums1: [Int], _ nums2: [Int]) -> Double {
+    // Merge the two arrays
+    let mergedArray = (nums1 + nums2).sorted()
+
+    // Calculate the middle index
+    let mid = mergedArray.count / 2
+
+    if mergedArray.count % 2 == 1 {
+        // If odd, return the middle value
+        return Double(mergedArray[mid])
+    }
+    // If even, average the two middle values
+    return Double(mergedArray[mid - 1] + mergedArray[mid]) / 2.0
+}
+```
+[![Source code][solution-shield]][solution1-url]
+
+#### Complexity Analysis
+##### Time Complexity
+Merging the two arrays takes `O(m+n)` time. Sorting the merged array takes `O((m+n)log(m+n))` time. Thus, the overall time complexity is dominated by the sorting step.
+$$O(m+n) + O((m+n) \log(m+n)) = O((m+n) \log(m+n))$$
+##### Space Complexity
+This approach creates a new array to hold the merged result of the two input arrays, which requires additional space proportional to the size of the merged array.
+$$O(m+n)$$
+
+### 2<sup>nd</sup> Solution: Two Pointers
+This approach uses two pointers to merge the arrays without actually creating a new array, making it more space efficient.
+
+``` swift
+func findMedianSortedArrays(_ nums1: [Int], _ nums2: [Int]) -> Double {
+    let total = nums1.count + nums2.count
+    let mid = total / 2
+    var i = 0, j = 0
+    var current = 0, previous = 0
+
+    for _ in 0...mid {
+        previous = current
+        if i < nums1.count && (j >= nums2.count || nums1[i] < nums2[j]) {
+            current = nums1[i]
+            i += 1
+        } else {
+            current = nums2[j]
+            j += 1
+        }
+    }
+
+    if total % 2 == 0 {
+        return Double(current + previous) / 2.0
+    }
+    return Double(current)
+}
+```
+[![Source code][solution-shield]][solution2-url]
+
+#### Complexity Analysis
+##### Time Complexity
+This approach merges the two arrays in a single pass using two pointers, one for each array. Each element is compared and added to the merged array, so the time complexity is linear in terms of the sum of the sizes of the arrays.
+$$O(m+n)$$
+##### Space Complexity
+Similar to the merge and sort solution, this approach also requires a new array to store the merged result, leading to the same space complexity.
+$$O(m+n)$$
+
+### 3<sup>rd</sup> Solution: Binary Search
+This approach uses binary search to partition the arrays such that we can find the median in `O(log(min(m,n)))` time. This is the most efficient solution. 👨‍🏫
+
+``` swift
+func findMedianSortedArrays(_ nums1: [Int], _ nums2: [Int]) -> Double {
+    let (a, b) = nums1.count <= nums2.count ? (nums1, nums2) : (nums2, nums1)
+    let (m, n) = (a.count, b.count)
+
+    var low = 0
+    var high = m
+    let mid = (m + n + 1) / 2
+
+    while low <= high {
+        let i = (low + high) / 2
+        let j = mid - i
+
+        if i < m && a[i] < b[j - 1] {
+            low = i + 1
+        } else if i > 0 && a[i - 1] > b[j] {
+            high = i - 1
+        } else {
+            let maxOfLeft: Int
+            if i == 0 {
+                maxOfLeft = b[j - 1]
+            } else if j == 0 {
+                maxOfLeft = a[i - 1]
+            } else {
+                maxOfLeft = max(a[i - 1], b[j - 1])
+            }
+
+            if (m + n) % 2 == 1 {
+                return Double(maxOfLeft)
+            }
+
+            let minOfRight: Int
+            if i == m {
+                minOfRight = b[j]
+            } else if j == n {
+                minOfRight = a[i]
+            } else {
+                minOfRight = min(a[i], b[j])
+            }
+
+            return Double(maxOfLeft + minOfRight) / 2.0
+        }
+    }
+    return 0.0
+}
+```
+[![Source code][solution-shield]][solution3-url]
+
+#### Complexity Analysis
+##### Time Complexity
+The binary search approach is performed on the smaller of the two arrays. In each step, the search space is halved, leading to a logarithmic time complexity dependent on the size of the smaller array.
+$$O(\log(\min(m,n)))$$
+##### Space Complexity
+The binary search approach does not require any additional space apart from a few variables for indices and calculations, so the space complexity is constant.
+$$O(1)$$
+
+## Real World Applications
+Did you know? 🤔
+### Financial Data Analysis:
+In finance, merging datasets from different markets or exchanges is common. The median price of a stock or commodity can give an idea of its central tendency, especially when data comes from multiple sources.
+
+### Healthcare Data Integration:
+When combining patient data from different healthcare providers, finding the median of health metrics (such as age, BMI, blood pressure) across populations can be crucial for analysis and reporting.
+
+### Big Data Analytics:
+In large-scale data analysis, datasets might be split into smaller chunks, processed separately, and then merged. Algorithms like the binary search solution can efficiently find central metrics such as the median in these scenarios.
+
+### Sensor Data Fusion:
+In IoT (Internet of Things), data from different sensors might need to be combined and analyzed in real-time. Algorithms that efficiently find median values from sorted datasets are useful in scenarios such as anomaly detection or environmental monitoring.
+
+## Conclusion
+### Merge and Sort Solution
+This approach is easy to implement and understand, making it ideal for beginners or when working with small datasets. However, it is inefficient for large datasets due to its higher time complexity.
+- Advantages: Simple to implement and understand.
+- Disadvantages: Inefficient for large datasets due to O((m+n)log(m+n)) time complexity.
+#### Two Pointers Solution
+The two pointers approach is more efficient than the merge and sort method and still relatively simple to understand. It provides a linear time complexity, making it suitable for larger datasets where memory usage is not a concern.
+- Advantages: Linear time complexity, straightforward implementation.
+- Disadvantages: Requires additional space for the merged array.
+#### Binary Search Solution
+This is the most efficient solution with logarithmic time complexity and constant space complexity. It is well-suited for large datasets, especially when memory usage is critical. However, it requires a deeper understanding of binary search algorithms.
+- Advantages: Optimal time complexity, minimal space usage.
+- Disadvantages: More complex to implement and understand compared to the other solutions.
+
+By understanding the trade-offs between simplicity, time, and space efficiency, developers can choose the most appropriate algorithm based on the specific requirements of their application.
+
+<!-- Markdown references https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[problem-url]: https://leetcode.com/problems/median-of-two-sorted-arrays
+[solution-shield]: https://img.shields.io/badge/-solution-333?style=flat&logo=GitHub&logoColor=white
+[solution1-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/004%20-%20Median%20of%20Two%20Sorted%20Arrays/Problem004MergeSolution.swift
+[solution2-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/004%20-%20Median%20of%20Two%20Sorted%20Arrays/Problem004TwoPointerSolution.swift
+[solution3-url]: https://github.com/jobearrr/LeetSwift/blob/main/Sources/Solutions/004%20-%20Median%20of%20Two%20Sorted%20Arrays/Problem004BinarySearchSolution.swift
